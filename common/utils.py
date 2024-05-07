@@ -123,6 +123,9 @@ def upload_json_file():
     if uploaded_file is not None:
         try:
             st.session_state.prompt_dictionary = json.load(uploaded_file)
+            save_json(
+                "./data/prompt_dictionary.json", st.session_state.prompt_dictionary
+            )
             st.success("JSON file uploaded and replaced successfully!")
 
         except json.JSONDecodeError:
