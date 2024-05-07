@@ -101,3 +101,37 @@ class DocProcessStreamHandler(BaseCallbackHandler):
     def on_llm_end(self, response, **kwargs):
         self.msgs.add_ai_message(response)
         self.container.empty()
+
+
+def download_json_file(file_path):
+    with open(file_path, "r") as file:
+        json_data = json.load(file)
+
+    # Convert the JSON data to a string
+    json_string = json.dumps(json_data, indent=4)
+
+    # Create a download button
+    st.sidebar.download_button(
+        label="Download prompt dictionary - JSON",
+        data=json_string,
+        file_name="prompt_dictionary.json",
+        mime="application/json",
+    )
+
+
+def upload_json_file(file_path):
+    uploaded_file = st.sidebar.file_uploader(
+        "Upload prompt dictionary - JSON", type="json"
+    )
+    if uploaded_file is not None:
+        try:
+            json_data = json.load(uploaded_file)
+
+            # Save the uploaded JSON data to the specified file path
+            with open(file_path, "w") as file:
+                json.dump(json_data, file, indent=4)
+
+            st.success("JSON file uploaded and replaced successfully!")
+
+        except json.JSONDecodeError:
+            st.error("Invalid JSON file. Please upload a valid JSON file.")

@@ -9,6 +9,10 @@ from common.prompt import (
     save_prompt_description,
     save_prompt_text,
 )
+from common.utils import (
+    download_json_file,
+    upload_json_file,
+)
 
 
 def main():
@@ -65,6 +69,10 @@ def main():
         label=f":red[DELETE PROMPT: **{st.session_state.prompt_name}** (cannot be undone)]",
         on_click=lambda: delete_prompt(st.session_state.prompt_name),
     )
+
+    file_path = "./data/prompt_dictionary.json"
+    download_json_file(file_path)
+    upload_json_file(file_path)
 
 
 if __name__ == "__main__":
