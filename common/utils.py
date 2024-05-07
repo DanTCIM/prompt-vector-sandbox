@@ -103,12 +103,9 @@ class DocProcessStreamHandler(BaseCallbackHandler):
         self.container.empty()
 
 
-def download_json_file(file_path):
-    with open(file_path, "r") as file:
-        json_data = json.load(file)
-
+def download_json_file(dictionary):
     # Convert the JSON data to a string
-    json_string = json.dumps(json_data, indent=4)
+    json_string = json.dumps(dictionary, indent=4)
 
     # Create a download button
     st.sidebar.download_button(
@@ -119,18 +116,13 @@ def download_json_file(file_path):
     )
 
 
-def upload_json_file(file_path):
+def upload_json_file():
     uploaded_file = st.sidebar.file_uploader(
         "Upload prompt dictionary - JSON", type="json"
     )
     if uploaded_file is not None:
         try:
-            json_data = json.load(uploaded_file)
-
-            # Save the uploaded JSON data to the specified file path
-            with open(file_path, "w") as file:
-                json.dump(json_data, file, indent=4)
-
+            st.session_state.prompt_dictionary = json.load(uploaded_file)
             st.success("JSON file uploaded and replaced successfully!")
 
         except json.JSONDecodeError:

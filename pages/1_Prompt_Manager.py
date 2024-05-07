@@ -70,9 +70,8 @@ def main():
         on_click=lambda: delete_prompt(st.session_state.prompt_name),
     )
 
-    file_path = "./data/prompt_dictionary.json"
-    download_json_file(file_path)
-    upload_json_file(file_path)
+    download_json_file(st.session_state.prompt_dictionary)
+    upload_json_file()
 
 
 if __name__ == "__main__":
