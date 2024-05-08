@@ -332,7 +332,7 @@ def main():
         #         msgs,
         #     ),
         #     help="Processing all loaded documents as once. Can take a while to complete.",
-        )
+        # )
     else:
         st.sidebar.write(
             "No document loaded. Please upload a document first to process."
