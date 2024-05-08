@@ -27,6 +27,24 @@ def load_document(uploaded_file):
         )
 
 
+def load_and_combine_documents(uploaded_files):
+    combined_text = ""
+
+    for uploaded_file in uploaded_files:
+        try:
+            loader = load_document(uploaded_file)
+            text = loader.load()
+
+            combined_text += f"{uploaded_file.name}: {text}\n"
+
+        except ValueError as e:
+            print(f"Error loading file {uploaded_file.name}: {str(e)}")
+        except Exception as e:
+            print(f"Unexpected error loading file {uploaded_file.name}: {str(e)}")
+
+    return combined_text.strip()
+
+
 def text_split_fn(loaded_doc):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -38,13 +56,13 @@ def text_split_fn(loaded_doc):
 
 
 def file_uploader(collection_name):
-    uploaded_file = st.file_uploader(
+    uploaded_files = st.file_uploader(
         label=f"Upload your own PDF, DOCX, or TXT file to collection **{collection_name}**.",
         type=["pdf", "docx", "txt"],
-        accept_multiple_files=False,
+        accept_multiple_files=True,
         help="Pictures or charts in the document are not recognized",
     )
-    return uploaded_file
+    return uploaded_files
 
 
 index_name = "sandbox"

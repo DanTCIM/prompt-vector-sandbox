@@ -180,60 +180,69 @@ def main():
     vectorstore = setup_vectorstore(index_name, st.session_state.collection_name)
     index = pc.Index(index_name)
 
-    uploaded_file = file_uploader(st.session_state.collection_name)
+    uploaded_files = file_uploader(st.session_state.collection_name)
 
     # Initialize session state variables
-    if "curr_file" not in st.session_state:
-        st.session_state.curr_file = None
+    if "curr_files" not in st.session_state:
+        st.session_state.curr_files = []
 
-    if "prev_file" not in st.session_state:
-        st.session_state.prev_file = None
+    if "prev_files" not in st.session_state:
+        st.session_state.prev_files = []
 
-    if "loaded_doc" not in st.session_state:
-        st.session_state.loaded_doc = None
+    if "loaded_docs" not in st.session_state:
+        st.session_state.loaded_docs = []
 
-    if uploaded_file is not None:
-        st.session_state.curr_file = uploaded_file.name
+    if uploaded_files:
+        file_names = [
+            uploaded_file.name for uploaded_file in uploaded_files
+        ]  # Get the names of all uploaded files
+        st.session_state.curr_files = file_names
 
     if (
-        st.session_state.curr_file is not None
-        and st.session_state.curr_file != st.session_state.prev_file
+        st.session_state.curr_files
+        and st.session_state.curr_files != st.session_state.prev_files
     ):
 
         with st.spinner("Extracting text and converting to embeddings..."):
-            loader = load_document(uploaded_file)
-            st.session_state.loaded_doc = loader.load()
+            st.session_state.loaded_docs = []
+            for uploaded_file in uploaded_files:
+                loader = load_document(uploaded_file)
+                st.session_state.loaded_docs.append(loader.load())
 
-            temp_list = get_filename_list(index, st.session_state.collection_name)
-            file_exists = st.session_state.curr_file in temp_list
-            if file_exists:
-                st.warning(
-                    f"A document named '{st.session_state.curr_file}' already exists and was not uploaded to the vector database. The loaded document is ready for processing."
-                )
-            else:
-                splits = text_split_fn(st.session_state.loaded_doc)
+                temp_list = get_filename_list(index, st.session_state.collection_name)
+                file_exists = uploaded_file.name in temp_list
+                if file_exists:
+                    st.warning(
+                        f"A document named '{uploaded_file.name}' already exists and was not uploaded to the vector database. The loaded document is ready for processing."
+                    )
+                else:
+                    splits = text_split_fn(st.session_state.loaded_docs[-1])
 
-                vectorstore.add_documents(
-                    documents=splits,
-                    namespace=st.session_state.collection_name,
-                )
-                st.success(
-                    f"'{st.session_state.curr_file}' is loaded and saved to the vector database. The loaded document is ready for processing."
-                )
-            try:
-                os.remove(uploaded_file.name)
-            except Exception as e:
-                pass
+                    vectorstore.add_documents(
+                        documents=splits,
+                        namespace=st.session_state.collection_name,
+                    )
+                    st.success(
+                        f"'{uploaded_file.name}' is loaded and saved to the vector database. The loaded document is ready for processing."
+                    )
+                try:
+                    os.remove(uploaded_file.name)
+                except Exception as e:
+                    pass
 
-        st.session_state.prev_file = st.session_state.curr_file
+        st.session_state.prev_files = st.session_state.curr_files
 
     selected_doc = "All"
 
     selected_doc = setup_document(
         index=index,
         collection_name=st.session_state.collection_name,
-        loaded_doc=st.session_state.loaded_doc,
-        file_name=st.session_state.curr_file,
+        loaded_doc=(
+            st.session_state.loaded_docs[0] if st.session_state.loaded_docs else None
+        ),
+        file_name=(
+            st.session_state.loaded_docs[0] if st.session_state.loaded_docs else None
+        ),
     )
     # except Exception as e:
     #     pass
@@ -285,21 +294,37 @@ def main():
         ]
     )
 
-    if st.session_state.loaded_doc is not None:
+    if st.session_state.loaded_docs:
         prompt = st.session_state.prompt_dictionary[st.session_state.prompt_name][
             "prompt"
         ]
+        for i, loaded_doc in enumerate(st.session_state.loaded_docs):
+            st.sidebar.button(
+                label=f"Process the doc: {st.session_state.curr_files[i]}",
+                use_container_width=True,
+                on_click=lambda: doc_processor(
+                    llm,
+                    prompt,
+                    loaded_doc,
+                    msgs,
+                ),
+                help="Processing the full document. Can take a while to complete.",
+            )
+
+        combined_docs = []
+        for loaded_doc_list in st.session_state.loaded_docs:
+            combined_docs.extend(loaded_doc_list)
 
         st.sidebar.button(
-            label=f"Process the doc: {st.session_state.curr_file}",
+            label="Process all loaded documents",
             use_container_width=True,
             on_click=lambda: doc_processor(
                 llm,
                 prompt,
-                st.session_state.loaded_doc,
+                combined_docs,
                 msgs,
             ),
-            help="Processing the full document. Can take a while to complete.",
+            help="Processing all loaded documents as once. Can take a while to complete.",
         )
     else:
         st.sidebar.write(
