@@ -43,8 +43,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.llm import LLMChain
-
-# from langchain_community.document_loaders import Docx2txtLoader
+from langchain.docstore.document import Document
 from langchain_anthropic import ChatAnthropic
 from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
@@ -302,29 +301,37 @@ def main():
             st.sidebar.button(
                 label=f"Process the doc: {st.session_state.curr_files[i]}",
                 use_container_width=True,
-                on_click=lambda: doc_processor(
+                on_click=lambda doc=loaded_doc: doc_processor(
                     llm,
                     prompt,
-                    loaded_doc,
+                    doc,
                     msgs,
                 ),
                 help="Processing the full document. Can take a while to complete.",
             )
 
-        combined_docs = []
-        for loaded_doc_list in st.session_state.loaded_docs:
-            combined_docs.extend(loaded_doc_list)
+        # combined_page_content = ""
+        # for loaded_doc_list in st.session_state.loaded_docs:
+        #     for doc in loaded_doc_list:
+        #         combined_page_content += doc.page_content + "\n"
 
-        st.sidebar.button(
-            label="Process all loaded documents",
-            use_container_width=True,
-            on_click=lambda: doc_processor(
-                llm,
-                prompt,
-                combined_docs,
-                msgs,
-            ),
-            help="Processing all loaded documents as once. Can take a while to complete.",
+        # combined_doc = [
+        #     Document(
+        #         page_content=combined_page_content,
+        #         metadata={"source": "Combined document"},
+        #     )
+        # ]
+
+        # st.sidebar.button(
+        #     label="Process all loaded documents",
+        #     use_container_width=True,
+        #     on_click=lambda doc=combined_doc: doc_processor(
+        #         llm,
+        #         prompt,
+        #         doc,
+        #         msgs,
+        #     ),
+        #     help="Processing all loaded documents as once. Can take a while to complete.",
         )
     else:
         st.sidebar.write(
